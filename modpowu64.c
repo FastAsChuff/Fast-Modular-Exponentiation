@@ -107,7 +107,48 @@ uint64_t modpowu64oddn(uint64_t a, uint64_t e, uint64_t n) {
   return fromu64mg(res, n, ninv, twoto64modn);
 }
 
+
 uint64_t modpowu64(uint64_t a, uint64_t e, uint64_t n) {
+// Returns (a^e) mod n.
+  if (n < 2ULL) return 0;
+  if (a < 2ULL) return a;
+  if (n & 1ULL) {
+    return modpowu64oddn(a, e, n);
+  } else {
+    uint64_t nover2 = n/2;
+    if (nover2 & 1ULL) { 
+      uint64_t resmodnover2 = modpowu64oddn(a, e, nover2);
+      return ((resmodnover2 - a) & 1ULL)*nover2 + resmodnover2;
+    } else {
+      uint64_t nover4 = n/4;
+      if ((nover4 & 1ULL) && (a & 1ULL)) { 
+        uint64_t resmodnover4 = modpowu64oddn(a, e, nover4);
+        // a^e mod 4 = 3 if a = 3 mod 4 & e odd, 1 otherwise
+        uint64_t resmod4 = 1 + 2*(((a & 3ULL) == 3) && (e & 1ULL));
+        // resmodnover4 + x*nover4 = resmod4 mod 4
+        uint64_t x = (nover4*(resmod4 - resmodnover4)) & 3ULL;
+        return x*nover4 + resmodnover4;
+      } else {
+        uint64_t nctz = __builtin_ctzll(n);
+        uint64_t oddn = n >> nctz;
+        uint64_t noveroddn = 1ULL << nctz;
+        uint64_t mask = noveroddn-1;
+        uint64_t atoemododdn = modpowu64oddn(a, e, oddn);
+        uint64_t atoemod2pow = modpowu64general(a, e, noveroddn);
+#ifdef USEHACKERSDELIGHTFNS
+        uint64_t invatoemododdn = modinv64x(oddn);
+#else
+        uint64_t invatoemododdn = modinv64(oddn);
+#endif
+        // a^e = atoemododdn + m*oddn mod n
+        // m = (atoemod2pow - atoemododdn)*oddn^(-1) mod noveroddn
+        uint64_t m = ((atoemod2pow - atoemododdn)*invatoemododdn) & mask;
+        return atoemododdn + m*oddn;
+      } 
+    } 
+  }
+}
+uint64_t modpowu64hgfhgf(uint64_t a, uint64_t e, uint64_t n) {
 // Returns (a^e) mod n.
   if (n < 2ULL) return 0;
   if (a < 2ULL) return a;
