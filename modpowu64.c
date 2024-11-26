@@ -92,6 +92,22 @@ uint64_t modpowu64general(uint64_t a, uint64_t e, uint64_t n) {
   return res;
 }
 
+uint64_t modpowu642pow(uint64_t a, uint64_t e, uint64_t n) {
+// Returns a^e mod n = 2^k.
+  if (n < 2) return 0;
+  a %= n;
+  if (a < 2) return a;
+  uint64_t res = 1;
+  uint64_t sq = a;
+  while (1) {
+    res = ((e & 1ULL) ? (res * sq) : res);
+    e >>= 1;
+    if (e == 0) break;
+    sq = (sq*sq);
+  }
+  return res % n;
+}
+
 uint64_t modpowu64oddn(uint64_t a, uint64_t e, uint64_t n) {
 // Returns (a^e) mod odd n.
 // a and n must be odd.
@@ -136,7 +152,7 @@ uint64_t modpowu64(uint64_t a, uint64_t e, uint64_t n) {
         uint64_t noveroddn = 1ULL << nctz;
         uint64_t mask = noveroddn-1ULL;
         uint64_t atoemododdn = modpowu64oddn(a, e, oddn);
-        uint64_t atoemod2pow = modpowu64general(a & mask, e, noveroddn);
+        uint64_t atoemod2pow = modpowu642pow(a & mask, e, noveroddn);
 #ifdef USEHACKERSDELIGHTFNS
         uint64_t invatoemododdn = modinv64x(oddn);
 #else
