@@ -39,7 +39,7 @@ uint64_t modsumu64mg(uint64_t ar, uint64_t br, uint64_t n, uint64_t ninv, uint64
 }
 
 uint64_t modprodu64mg(uint64_t ar, uint64_t br, uint64_t n, uint64_t ninv, uint64_t twoto64modn) {
-  // n must be odd.
+  // n must be odd >= 3.
   // ar and br must be in Montgomery form with r = 2^64.
   // Returned value is congruent to abr mod n. (NOT necessarily equal to abr mod n.)
   // ab + mn = 0 mod 2^64
@@ -48,12 +48,12 @@ uint64_t modprodu64mg(uint64_t ar, uint64_t br, uint64_t n, uint64_t ninv, uint6
   uint64_t m = prod128 & 0xffffffffffffffffULL;         
   m *= -ninv;                                           // 0 <= m < 2^64
   unsigned __int128 mn128 = (unsigned __int128)m*n;     // 0 <= mn128 <= n*(2^64 - 1) && mn128 = -arbr mod 2^64
-  unsigned __int128 sum = prod128 + mn128;              // 0 <= sum <= 2^128 + (n - 3)2^64
-  unsigned __int128 max128 = (prod128 > mn128 ? prod128 : mn128);
-  uint64_t sumu64 = sum >> 64;                          // 0 <= sum >> 64 <= 2^64 + (n - 3)
+  unsigned __int128 sum = prod128 + mn128;              // 0 <= sum <= 2^128 + (n - 2)2^64 + 1 - n 
+  // Since the lower 64 bits are zero, sum <= 2^128 + (n - 3)2^64.
+  uint64_t sumu64 = sum >> 64;                          // 0 <= sum / 2^64 <= 2^64 + (n - 3)
   // twoto64modn = 2^64 - xn for some x >= 1, so if sum overflowed, 
   // 0 <= sumu64 + twoto64modn <= (n - 3) + 2^64 - xn = 2^64 - (x-1)n - 3 < 2^64
-  return sumu64 + (sum < max128)*twoto64modn;
+  return sumu64 + (sum < mn128)*twoto64modn;
 }
 
 uint64_t modpowu64mg(uint64_t ar, uint64_t e, uint64_t n, uint64_t ninv, uint64_t twoto64modn) {
