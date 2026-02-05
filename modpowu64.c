@@ -32,7 +32,7 @@ uint64_t fromu64mg(uint64_t ar, uint64_t n, uint64_t ninv, uint64_t twoto64modn)
 
 uint64_t modsumu64mg(uint64_t ar, uint64_t br, uint64_t n, uint64_t ninv, uint64_t twoto64modn) {
   uint64_t sum = ar+br;
-  if (sum > ar) return sum;
+  if (sum >= ar) return sum;
   sum += twoto64modn;
   if (sum > twoto64modn) return sum;
   return ((unsigned __int128)ar + br) % n;
